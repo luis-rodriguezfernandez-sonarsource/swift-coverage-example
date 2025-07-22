@@ -25,7 +25,7 @@ jobs:
             exit 1
           fi
           echo "Coverage data found at: $coverage_path"
-          xcrun --run llvm-cov show -instr-profile=Build/Build/ProfileData/00006000-000428843C29801E/Coverage.profdata \
+          xcrun --run llvm-cov show -instr-profile=$coverage_path \
                 Build/Build/Products/Debug/swift-coverage-example.app/Contents/MacOS/swift-coverage-example \
                 >Coverage.report
 
