@@ -10,6 +10,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+        name: Checkout code
 
       - name: Build and test with Xcode
         run: xcodebuild -project swift-coverage-example.xcodeproj/ -scheme swift-coverage-example -derivedDataPath Build/ -enableCodeCoverage YES clean build test CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
@@ -29,7 +30,15 @@ jobs:
                 Build/Build/Products/Debug/swift-coverage-example.app/Contents/MacOS/swift-coverage-example \
                 >Coverage.report
 
-      - name: Run analysis
-        run: | 
-          ls -alrt
-          cat Coverage.report
+      - uses: SonarSource/sonarqube-scan-action@v4
+        name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # analysis token associated to your project
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+            projectBaseDir: .
+            args: >
+              -Dsonar.projectKey=swift-coverage-example
+              -Dsonar.projectName=swift-coverage-example
+              -Dsonar.swift.coverage.reportPaths=Coverage.report
+              -Dsonar.verbose=true
