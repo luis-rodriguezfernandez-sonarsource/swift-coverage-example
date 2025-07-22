@@ -11,8 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build
+      - name: Build and test with Xcode
         run: xcodebuild -project swift-coverage-example.xcodeproj/ -scheme swift-coverage-example -derivedDataPath Build/ -enableCodeCoverage YES clean build test CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
-      - name: Run tests
-        run: swift test
+      - name: Find Coverage.profdata
+        run: find Build/Build/ProfileData -name "Coverage.profdata" -print > coverage_path.txt
+
+      - name: Provide llvm-cov coverage report
+        run: |
+          coverage_path=$(cat coverage_path.txt)
+          if [ -z "$coverage_path" ]; then
+            echo "No coverage data found."
+            exit 1
+          fi
+          echo "Coverage data found at: $coverage_path"
