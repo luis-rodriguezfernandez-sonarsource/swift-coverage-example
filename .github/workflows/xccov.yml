@@ -1,0 +1,43 @@
+name: Build
+on:
+  push:
+    branches:
+      - xccov
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout code
+
+      - name: Build and test with Xcode
+        run: xcodebuild -project swift-coverage-example.xcodeproj/ -scheme swift-coverage-example -derivedDataPath Build/ -enableCodeCoverage YES clean build test CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
+      - name: Find Xcode test result folder (*.xcresult)
+        run: find Build/Build/ProfileData -name "*.xcresult" -print > xcresult_path.txt
+
+      - name: Transform Xcode test result folder to coverage file
+        run: |
+          xcresult_path=$(cat xcresult_path.txt)
+          if [ -z "$xcresult_path" ]; then
+            echo "No coverage data found."
+            exit 1
+          fi
+          echo "Coverage data found at: $xcresult_path"
+          bash xccov-to-sonarqube-generic.sh $xcresult_path >Coverage.xml
+
+
+      - uses: SonarSource/sonarqube-scan-action@v4
+        name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # analysis token associated to your project
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+            projectBaseDir: .
+            args: >
+              -Dsonar.projectKey=swift-coverage-example
+              -Dsonar.projectName=swift-coverage-example
+              -Dsonar.coverageReportPaths=Coverage.xml
+              -Dsonar.verbose=true
