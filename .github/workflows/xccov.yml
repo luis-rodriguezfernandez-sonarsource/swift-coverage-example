@@ -16,7 +16,7 @@ jobs:
         run: xcodebuild -project swift-coverage-example.xcodeproj/ -scheme swift-coverage-example -derivedDataPath Build/ -enableCodeCoverage YES clean build test CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
       - name: Find Xcode test result folder (*.xcresult)
-        run: find Build/Build/ProfileData -name "*.xcresult" -print > xcresult_path.txt
+        run: find . -name "*.xcresult" -print > xcresult_path.txt
 
       - name: Transform Xcode test result folder to coverage file
         run: |
